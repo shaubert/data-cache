@@ -43,7 +43,7 @@ public class FileStorage implements DataStorage {
     public FileStorage(Context context, int storageVersion, boolean debugMode,
                        FileSerializer fileSerializer, DefaultDataCallback defaultDataCallback) {
         this.version = storageVersion;
-        this.context = context;
+        this.context = context.getApplicationContext();
         this.debugMode = debugMode;
         this.fileSerializer = fileSerializer;
         this.defaultDataCallback = defaultDataCallback;
@@ -302,7 +302,7 @@ public class FileStorage implements DataStorage {
         private boolean debugMode;
 
         private Builder(Context context) {
-            this.context = context;
+            this.context = context.getApplicationContext();
         }
 
         /**
