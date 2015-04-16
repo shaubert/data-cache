@@ -19,11 +19,13 @@ public class PersistableWrapper<DATA> implements AsyncEntry<DATA> {
     private Lock getsLock = new ReentrantLock();
     private Set<DataCallback<DATA>> waitingAsyncGets = new HashSet<>();
     private Entry<DATA> originalEntry;
+    private boolean mergeable;
 
     public PersistableWrapper(Entry<DATA> entry, final PersistentEntryCallback<DATA> persistentEntryCallback, DataStorage storage) {
         this.originalEntry = entry;
         this.persistableCallback = persistentEntryCallback;
         this.storage = storage;
+        this.mergeable = MergeableData.class.isAssignableFrom(entry.getDataClass());
 
         waitingForStorage = true;
         storage.load(getDataClass(), getKey(), new StorageLoadCallback<DATA>() {
@@ -48,25 +50,11 @@ public class PersistableWrapper<DATA> implements AsyncEntry<DATA> {
         });
     }
 
-    @SuppressWarnings("unchecked")
     private void mergeWithCurrentData(DATA dataFromStorage) {
-        boolean merged = false;
-        DATA dataFromCache = originalEntry.getValue();
-        final DATA resultData;
-        if (dataFromCache != null) {
-            if (dataFromCache instanceof MergeableData) {
-                resultData = ((MergeableData<DATA>) dataFromStorage).merge(dataFromCache);
-                merged = true;
-            } else {
-                resultData = dataFromCache;
-            }
-        } else {
-            resultData = dataFromStorage;
-        }
-
-        setValue(resultData);
+        boolean merged = mergeable && originalEntry.getValue() != null;
+        setValue(dataFromStorage);
         if (merged) {
-            persist(resultData);
+            persist(originalEntry.getValue());
         }
     }
 
@@ -91,9 +79,11 @@ public class PersistableWrapper<DATA> implements AsyncEntry<DATA> {
     @Override
     public void setValue(DATA value) {
         originalEntry.setValue(value);
-        if (!waitingForStorage && value != null) {
+
+        DATA mergedValue = getValue();
+        if (!waitingForStorage && mergedValue != null) {
             //persist merged result
-            persist(value);
+            persist(mergedValue);
         }
     }
 

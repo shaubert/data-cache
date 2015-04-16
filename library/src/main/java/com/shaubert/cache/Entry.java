@@ -18,8 +18,9 @@ public interface Entry<DATA> {
     DATA getValue();
 
     /**
-     * Put value in cache entry
-     * @param value
+     * Put value in cache entry. If value implements {@link com.shaubert.cache.MergeableData MergeableData} than new value
+     * will be merged with previous value (if exists).
+     * @param value new value
      */
     void setValue(DATA value);
 

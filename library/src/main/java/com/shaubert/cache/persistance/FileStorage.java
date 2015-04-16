@@ -12,7 +12,7 @@ import java.io.*;
 /**
  * Persistent storage based on files
  */
-public abstract class FileStorage implements DataStorage {
+public class FileStorage implements DataStorage {
 
 
     public static final String TAG = FileStorage.class.getSimpleName();
@@ -28,6 +28,10 @@ public abstract class FileStorage implements DataStorage {
     private DefaultDataCallback defaultDataCallback;
     private SharedPreferences storagePrefs;
     private boolean debugMode = true;
+
+    private FileStorage(Builder builder) {
+        this(builder.context, builder.version, builder.debugMode, builder.fileSerializer, builder.defaultDataCallback);
+    }
 
     /**
      * @param context context
@@ -45,6 +49,10 @@ public abstract class FileStorage implements DataStorage {
         this.defaultDataCallback = defaultDataCallback;
 
         initCacheIfNeeded();
+    }
+
+    public static Builder newBuilder(Context context) {
+        return new Builder(context);
     }
 
     @SuppressLint("CommitPrefEdits")
@@ -286,4 +294,63 @@ public abstract class FileStorage implements DataStorage {
 
     }
 
+    public static final class Builder {
+        private int version = -1;
+        private Context context;
+        private FileSerializer fileSerializer;
+        private DefaultDataCallback defaultDataCallback;
+        private boolean debugMode;
+
+        private Builder(Context context) {
+            this.context = context;
+        }
+
+        /**
+         * @param version version of data storage. If version > current version, storage will be cleared.
+         * @return this
+         */
+        public Builder version(int version) {
+            this.version = version;
+            return this;
+        }
+
+        /**
+         * @param fileSerializer fileSerializer serializer for objects. By default it's {@link com.shaubert.cache.persistance.JavaSerializer JavaSerializer}
+         * @return this
+         */
+        public Builder fileSerializer(FileSerializer fileSerializer) {
+            this.fileSerializer = fileSerializer;
+            return this;
+        }
+
+        /**
+         * @param defaultDataCallback optional callback to override data loading
+         * @return this
+         */
+        public Builder defaultDataCallback(DefaultDataCallback defaultDataCallback) {
+            this.defaultDataCallback = defaultDataCallback;
+            return this;
+        }
+
+        /**
+         * @param debugMode debugMode true if you want log messages and exceptions on serialization errors, false otherwise
+         * @return this
+         */
+        public Builder debugMode(boolean debugMode) {
+            this.debugMode = debugMode;
+            return this;
+        }
+
+        /**
+         * Build storage or throw exception if version not set
+         * @return created storage
+         */
+        public FileStorage build() {
+            if (version == -1) {
+                throw new IllegalArgumentException("provide storage version");
+            }
+            if (fileSerializer == null) fileSerializer = new JavaSerializer();
+            return new FileStorage(this);
+        }
+    }
 }

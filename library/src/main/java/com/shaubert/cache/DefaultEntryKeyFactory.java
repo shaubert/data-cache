@@ -3,9 +3,9 @@ package com.shaubert.cache;
 import android.text.TextUtils;
 import android.util.Log;
 
-public class DefaultCacheKeyFactory implements CacheKeyFactory {
+public class DefaultEntryKeyFactory implements EntryKeyFactory {
 
-    public static final String TAG = DefaultCacheKeyFactory.class.getSimpleName();
+    public static final String TAG = DefaultEntryKeyFactory.class.getSimpleName();
 
     private static final char SEPARATOR = '/';
 

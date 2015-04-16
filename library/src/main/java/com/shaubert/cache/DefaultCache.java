@@ -8,11 +8,11 @@ import java.util.Map;
 public class DefaultCache implements Cache {
 
     private Map<String, Entry<?>> cache = new HashMap<>();
-    private CacheKeyFactory keyProducer;
+    private EntryKeyFactory keyProducer;
     private EntryFactory entryFactory;
 
-    public DefaultCache(CacheKeyFactory keyProducer, EntryFactory entryFactory) {
-        this.keyProducer = keyProducer;
+    public DefaultCache(EntryKeyFactory keyFactory, EntryFactory entryFactory) {
+        this.keyProducer = keyFactory;
         this.entryFactory = entryFactory;
     }
 

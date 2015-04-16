@@ -8,33 +8,33 @@ import com.shaubert.cache.persistance.*;
  */
 public class DefaultEntryFactory implements EntryFactory {
 
-    private CacheKeyFactory keyProducer;
+    private EntryKeyFactory keyFactory;
     private DataStorage storage;
 
     /**
      * Cache {@link com.shaubert.cache.Entry Entry} factory without data storage.
-     * @param keyProducer factory of {@link com.shaubert.cache.Entry Entry} keys
+     * @param keyFactory factory of {@link com.shaubert.cache.Entry Entry} keys
      */
-    public DefaultEntryFactory(CacheKeyFactory keyProducer) {
-        this(keyProducer, null);
+    public DefaultEntryFactory(EntryKeyFactory keyFactory) {
+        this(keyFactory, null);
     }
 
     /**
      * Cache {@link com.shaubert.cache.Entry Entry} factory.
-     * @param keyProducer factory of {@link com.shaubert.cache.Entry Entry} keys
+     * @param keyFactory factory of {@link com.shaubert.cache.Entry Entry} keys
      * @param storage optional entry storage for data classes annotated with
      *                {@link com.shaubert.cache.persistance.PersistableData PersistableData}.
      *                Provide null to prevent storing.
      *
      */
-    public DefaultEntryFactory(CacheKeyFactory keyProducer, DataStorage storage) {
-        this.keyProducer = keyProducer;
+    public DefaultEntryFactory(EntryKeyFactory keyFactory, DataStorage storage) {
+        this.keyFactory = keyFactory;
         this.storage = storage;
     }
 
     @Override
     public <T> Entry<T> createEntry(String key) {
-        CacheKeyFactory.KeyParams keyParams = keyProducer.getKeyParams(key);
+        EntryKeyFactory.KeyParams keyParams = keyFactory.getKeyParams(key);
         @SuppressWarnings("unchecked")
         Class<T> dataClass = (Class<T>) keyParams.getKeyClass();
         DefaultEntry<T> entry = new DefaultEntry<>(key, dataClass);

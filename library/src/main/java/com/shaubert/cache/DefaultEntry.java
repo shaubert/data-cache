@@ -6,10 +6,12 @@ public class DefaultEntry<DATA> implements Entry<DATA> {
 
     private DataState state;
     private DATA value;
+    private boolean mergeable;
 
     public DefaultEntry(String key, Class<DATA> dataClass) {
         this.key = key;
         this.dataClass = dataClass;
+        this.mergeable = MergeableData.class.isAssignableFrom(dataClass);
     }
 
     @Override
@@ -22,9 +24,14 @@ public class DefaultEntry<DATA> implements Entry<DATA> {
         return value;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void setValue(DATA value) {
-        this.value = value;
+        if (value != null && this.value != null && mergeable) {
+            this.value = ((MergeableData<DATA>) this.value).merge(value);
+        } else {
+            this.value = value;
+        }
     }
 
     @Override

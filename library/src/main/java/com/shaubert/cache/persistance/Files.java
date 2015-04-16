@@ -1,6 +1,8 @@
 package com.shaubert.cache.persistance;
 
 import android.util.Log;
+import com.shaubert.cache.DataState;
+import com.shaubert.cache.Entry;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,6 +26,8 @@ class Files {
     }
 
     public static boolean copy(File from, File to) {
+        Entry<File> t = null;
+        t.setState(DataState.UPDATE);
         FileInputStream inputStream = null;
         FileOutputStream outputStream = null;
         try {
