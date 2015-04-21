@@ -95,7 +95,33 @@ If you want to make your response persistable add `PersistableData` annotation t
         }
     }
 
-Note that by default `FileStorage` uses `JavaSerializer`. You can easily implement for example `GSONSerializer` just look at `FileSerializer` interface.
+Note that by default `FileStorage` uses `JavaSerializer`. You can easily implement for example `GSONSerializer` just look at `FileSerializer` interface:
+    
+    public class GsonSerializer implements FileSerializer {
+        private Gson gson;
+    
+        public GsonSerializer(Gson gson) {
+            this.gson = gson;
+        }
+    
+        @Override
+        public boolean isApplicable(Class<?> aClass) {
+            return true;
+        }
+    
+        @Override
+        public <T> void serialize(T t, OutputStream outputStream) throws IOException {
+            JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(outputStream));
+            gson.toJson(t, t.getClass(), jsonWriter);
+            jsonWriter.flush();
+        }
+    
+        @Override
+        public <T> T deserialize(Class<T> tClass, InputStream inputStream) throws IOException {
+            JsonReader jsonReader = new JsonReader(new InputStreamReader(inputStream));
+            return gson.fromJson(jsonReader, tClass);
+        }
+    }
 
 Note that on persistable data `entry.getValue()` will return null while data is loading. If you want you can pass callback to `getValue` like this:
 
