@@ -8,7 +8,7 @@ In-memory and persistent cache for Android
         maven{url "https://github.com/shaubert/maven-repo/raw/master/releases"}
     }
     dependencies {
-        compile 'com.shaubert.cache:library:1.0.1'
+        compile 'com.shaubert.cache:library:1.0.3'
     }
 
 ## Requirements
