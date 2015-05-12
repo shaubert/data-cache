@@ -41,7 +41,7 @@ public class DefaultEntry<DATA> implements Entry<DATA> {
 
     @Override
     public boolean hasValue() {
-        return value == null;
+        return value != null;
     }
 
     @Override

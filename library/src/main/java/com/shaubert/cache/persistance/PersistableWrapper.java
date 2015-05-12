@@ -153,7 +153,7 @@ public class PersistableWrapper<DATA> implements AsyncEntry<DATA> {
 
     @Override
     public boolean hasValue() {
-        return waitingForStorage || originalEntry.hasValue();
+        return !waitingForStorage && originalEntry.hasValue();
     }
 
     @Override
@@ -168,7 +168,7 @@ public class PersistableWrapper<DATA> implements AsyncEntry<DATA> {
 
     @Override
     public boolean isFailed() {
-        return false;
+        return !waitingForStorage && originalEntry.isFailed();
     }
 
     @Override
