@@ -9,9 +9,9 @@ public interface EntryKeyFactory {
     /**
      * Unique parameters of cached {@link com.shaubert.cache.Entry Entry}
      */
-    public interface KeyParams {
-        public Class<?> getKeyClass();
-        public String getKeyQualifier();
+    interface KeyParams {
+        Class<?> getKeyClass();
+        String getKeyQualifier();
     }
 
     /**

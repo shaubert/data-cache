@@ -25,7 +25,7 @@ public interface PersistentEntryCallback<DATA> {
 
     /**
      * Called after successful data save.
-     * @param data
+     * @param data saved data
      */
     void onDataSaved(DATA data);
 

@@ -50,11 +50,13 @@ public class DefaultEntryFactory implements EntryFactory {
         return entry;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "TryWithIdenticalCatches"})
     private <T> PersistentEntryCallback<T> createPersistableDataCallback(PersistableData persistable) {
         try {
             return (PersistentEntryCallback<T>) persistable.value().newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
