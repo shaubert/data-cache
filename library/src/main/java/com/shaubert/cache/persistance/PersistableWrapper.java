@@ -2,10 +2,7 @@ package com.shaubert.cache.persistance;
 
 import com.shaubert.cache.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -88,11 +85,6 @@ public class PersistableWrapper<DATA> implements AsyncEntry<DATA> {
     }
 
     @Override
-    public void setState(DataState state) {
-        originalEntry.setState(state);
-    }
-
-    @Override
     public String getKey() {
         return originalEntry.getKey();
     }
@@ -157,23 +149,48 @@ public class PersistableWrapper<DATA> implements AsyncEntry<DATA> {
     }
 
     @Override
-    public boolean isIdle() {
-        return !waitingForStorage && originalEntry.isIdle();
+    public boolean addMark(Object mark) {
+        return originalEntry.addMark(mark);
     }
 
     @Override
-    public boolean isUpdating() {
-        return waitingForStorage || originalEntry.isUpdating();
+    public boolean removeMark(Object mark) {
+        return originalEntry.removeMark(mark);
     }
 
     @Override
-    public boolean isFailed() {
-        return !waitingForStorage && originalEntry.isFailed();
+    public boolean hasMark(Object mark) {
+        return originalEntry.hasMark(mark);
+    }
+
+    @Override
+    public boolean hasMarkOf(Class<?> markClass) {
+        return originalEntry.hasMarkOf(markClass);
+    }
+
+    @Override
+    public Collection<Object> getMarks() {
+        return originalEntry.getMarks();
+    }
+
+    @Override
+    public boolean hasMarks() {
+        return originalEntry.hasMarks();
+    }
+
+    @Override
+    public <T> T getMarkOf(Class<T> markClass) {
+        return originalEntry.getMarkOf(markClass);
+    }
+
+    @Override
+    public <T> Collection<T> getMarksOf(Class<T> markClass) {
+        return originalEntry.getMarksOf(markClass);
     }
 
     @Override
     public void clear() {
-
+        originalEntry.clear();
     }
 
 }

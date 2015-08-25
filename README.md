@@ -8,7 +8,7 @@ In-memory and persistent cache for Android
         maven{url "https://github.com/shaubert/maven-repo/raw/master/releases"}
     }
     dependencies {
-        compile 'com.shaubert.cache:library:1.0.4'
+        compile 'com.shaubert.cache:library:1.1'
     }
 
 ## Requirements
@@ -134,12 +134,12 @@ Note that on persistable data `entry.getValue()` will return null while data is 
 
 `DefaultEntryFactory` will create `AsyncEntry` for all classes with `PersistableData` annotation if `DataStorage` not null.
 
-### Data State
+### Marks
 
-Also you can set one of `DataState` to your entry. For example when you want to mark your cache entry is loading while executing request. Available states:
-*  `IDLE`
-*  `UPDATE`
-*  `FAIL`
+Also you can manage marks to your entry. For example when you want to mark your cache entry as loading while executing request. Marks available out of the box:
+*  `Entry.DIRTY_MARK`
+*  `Entry.FAILURE_MARK`
+*  `Entry.UPDATING_MARK`
   
 ### Mergeable Data
 
