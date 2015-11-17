@@ -6,16 +6,16 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileSerializersGroup implements FileSerializer {
+public class DataSerializersGroup implements DataSerializer {
 
-    private List<FileSerializer> fileSerializers = new ArrayList<FileSerializer>();
+    private List<DataSerializer> dataSerializers = new ArrayList<DataSerializer>();
 
-    public void add(FileSerializer serializer) {
-        fileSerializers.add(serializer);
+    public void add(DataSerializer serializer) {
+        dataSerializers.add(serializer);
     }
 
-    public void remove(FileSerializer serializer) {
-        fileSerializers.remove(serializer);
+    public void remove(DataSerializer serializer) {
+        dataSerializers.remove(serializer);
     }
 
     @Override
@@ -23,8 +23,8 @@ public class FileSerializersGroup implements FileSerializer {
         return getApplicable(clazz) != null;
     }
 
-    private FileSerializer getApplicable(Class<?> clazz) {
-        for (FileSerializer serializer : fileSerializers) {
+    private DataSerializer getApplicable(Class<?> clazz) {
+        for (DataSerializer serializer : dataSerializers) {
             if (serializer.isApplicable(clazz)) {
                 return serializer;
             }

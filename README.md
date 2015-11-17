@@ -8,7 +8,7 @@ In-memory and persistent cache for Android
         maven{url "https://github.com/shaubert/maven-repo/raw/master/releases"}
     }
     dependencies {
-        compile 'com.shaubert.cache:library:1.1'
+        compile 'com.shaubert.cache:library:1.2'
     }
 
 ## Requirements
@@ -29,7 +29,7 @@ Create `Cache` instance and configure it like this:
         DataStorage dataStorage = FileStorage.newBuilder(context)
                 .version(STORAGE_VERSION)
                 .debugMode(true) //if you want to read logs and get exceptions if serialization failed
-                .fileSerializer() //your serializer, by default it is JavaSerializer
+                .dataSerializer() //your serializer, by default it is JavaSerializer
                 .defaultDataCallback() //if you want to override data loading
                 .build();
         
@@ -95,9 +95,9 @@ If you want to make your response persistable add `PersistableData` annotation t
         }
     }
 
-Note that by default `FileStorage` uses `JavaSerializer`. You can easily implement for example `GSONSerializer` just look at `FileSerializer` interface:
+Note that by default `FileStorage` uses `JavaSerializer`. You can easily implement for example `GSONSerializer` just look at `DataSerializer` interface:
     
-    public class GsonSerializer implements FileSerializer {
+    public class GsonSerializer implements DataSerializer {
         private Gson gson;
     
         public GsonSerializer(Gson gson) {

@@ -4,7 +4,7 @@ import android.util.Log;
 
 import java.io.*;
 
-public class JavaSerializer implements FileSerializer {
+public class JavaSerializer implements DataSerializer {
 
     public static final String TAG = JavaSerializer.class.getSimpleName();
 

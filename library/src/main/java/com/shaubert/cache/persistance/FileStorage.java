@@ -24,28 +24,28 @@ public class FileStorage implements DataStorage {
     private final int version;
     private volatile boolean inited;
     private Context context;
-    private FileSerializer fileSerializer;
+    private DataSerializer dataSerializer;
     private DefaultDataCallback defaultDataCallback;
     private SharedPreferences storagePrefs;
     private boolean debugMode = true;
 
     private FileStorage(Builder builder) {
-        this(builder.context, builder.version, builder.debugMode, builder.fileSerializer, builder.defaultDataCallback);
+        this(builder.context, builder.version, builder.debugMode, builder.dataSerializer, builder.defaultDataCallback);
     }
 
     /**
      * @param context context
      * @param storageVersion version of data storage. If version > current version, storage will be cleared.
      * @param debugMode true if you want log messages and exceptions on serialization errors, false otherwise
-     * @param fileSerializer serializer for objects
+     * @param dataSerializer serializer for objects
      * @param defaultDataCallback optional callback to override data loading
      */
     public FileStorage(Context context, int storageVersion, boolean debugMode,
-                       FileSerializer fileSerializer, DefaultDataCallback defaultDataCallback) {
+                       DataSerializer dataSerializer, DefaultDataCallback defaultDataCallback) {
         this.version = storageVersion;
         this.context = context.getApplicationContext();
         this.debugMode = debugMode;
-        this.fileSerializer = fileSerializer;
+        this.dataSerializer = dataSerializer;
         this.defaultDataCallback = defaultDataCallback;
 
         initCacheIfNeeded();
@@ -100,7 +100,7 @@ public class FileStorage implements DataStorage {
         new SerializationAsyncTask<>(data,
                 version,
                 callback,
-                fileSerializer,
+                dataSerializer,
                 convertToFileName(key),
                 debugMode)
             .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
@@ -118,7 +118,7 @@ public class FileStorage implements DataStorage {
                     key,
                     callback,
                     defaultDataCallback,
-                    fileSerializer,
+                    dataSerializer,
                     convertToFileName(key),
                     debugMode)
                 .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -175,13 +175,13 @@ public class FileStorage implements DataStorage {
 
         public final String TAG = SerializationAsyncTask.class.getSimpleName();
 
-        private T data;
+        private byte[] dataBytes;
         private final int storageVersion;
         private Class<T> dataClass;
         private String key;
         private StorageSaveCallback<T> saveCallback;
         private StorageLoadCallback<T> loadCallback;
-        private FileSerializer serializer;
+        private DataSerializer serializer;
         private File dataFile;
         private T deserializedResult;
         private DefaultDataCallback defaultDataCallback;
@@ -189,18 +189,19 @@ public class FileStorage implements DataStorage {
 
         @SuppressWarnings("unchecked")
         public SerializationAsyncTask(T data, int storageVersion, StorageSaveCallback<T> callback,
-                                      FileSerializer serializer, File output, boolean debugMode) {
-            this.data = data;
+                                      DataSerializer serializer, File output, boolean debugMode) {
             this.storageVersion = storageVersion;
             this.debugMode = debugMode;
             this.dataClass = (Class<T>) data.getClass();
             this.saveCallback = callback;
             this.serializer = serializer;
             this.dataFile = output;
+
+            makeDataBytes(data);
         }
 
         public SerializationAsyncTask(Class<T> dataClass, int storageVersion, String key, StorageLoadCallback<T> callback,
-                                      DefaultDataCallback defaultDataCallback, FileSerializer serializer, File input,
+                                      DefaultDataCallback defaultDataCallback, DataSerializer serializer, File input,
                                       boolean debugMode) {
             this.dataClass = dataClass;
             this.storageVersion = storageVersion;
@@ -212,16 +213,39 @@ public class FileStorage implements DataStorage {
             this.debugMode = debugMode;
         }
 
+        private void makeDataBytes(T data) {
+            if (!serializer.isApplicable(dataClass)) return;
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream(1024 * 8);
+            try {
+                serializer.serialize(data, outputStream);
+                dataBytes = outputStream.toByteArray();
+            } catch (IOException ex) {
+                if (debugMode) Log.e(TAG, "failed to make copy of " + data, ex);
+            } catch (Throwable ex) {
+                if (debugMode) Log.e(TAG, "unknown error when copying " + data, ex);
+                if (debugMode) {
+                    throw new RuntimeException(ex);
+                }
+            } finally {
+                if (dataBytes == null) {
+                    cancel(false);
+                }
+            }
+        }
+
         @Override
         protected Boolean doInBackground(Void... params) {
+            if (isCancelled()) return false;
+
             if (serializer.isApplicable(dataClass)) {
                 OutputStream outputStream = null;
                 InputStream inputStream = null;
                 try {
                     long startTime = SystemClock.uptimeMillis();
-                    if (data != null) {
+                    if (dataBytes != null) {
                         outputStream = new FileOutputStream(dataFile);
-                        serializer.serialize(data, outputStream);
+                        serializer.serialize(dataBytes, outputStream);
                     } else {
                         boolean overrideLoading = defaultDataCallback != null
                                 && defaultDataCallback.hasDefaultDataFor(dataClass, key, storageVersion);
@@ -235,7 +259,7 @@ public class FileStorage implements DataStorage {
                         }
                     }
                     if (debugMode) Log.d(TAG, String.format("%s of %s: time = %dms, size = %db",
-                            data == null ? "deserialization" : "serialization",
+                            dataBytes == null ? "deserialization" : "serialization",
                             dataClass.getSimpleName(),
                             SystemClock.uptimeMillis() - startTime,
                             dataFile.exists() ? dataFile.length() : 0));
@@ -271,18 +295,29 @@ public class FileStorage implements DataStorage {
         protected void onPostExecute(Boolean result) {
             if (saveCallback != null || loadCallback != null) {
                 if (result) {
-                    T value = deserializedResult == null ? data : deserializedResult;
-                    if (value == null) {
-                        if (loadCallback != null) loadCallback.onEmptyResult();
-                    } else {
-                        if (loadCallback != null) loadCallback.onSuccess(value);
+                    if (dataBytes != null) {
                         if (saveCallback != null) saveCallback.onSuccess();
+                    } else {
+                        if (deserializedResult == null) {
+                            if (loadCallback != null) loadCallback.onEmptyResult();
+                        } else {
+                            if (loadCallback != null) loadCallback.onSuccess(deserializedResult);
+                        }
                     }
                 } else {
-                    if (loadCallback != null) loadCallback.onError();
-                    if (saveCallback != null) saveCallback.onError();
+                    if (dataBytes != null) {
+                        if (saveCallback != null) saveCallback.onError();
+                    } else {
+                        if (loadCallback != null) loadCallback.onError();
+                    }
                 }
             }
+        }
+
+        @Override
+        protected void onCancelled() {
+            if (saveCallback != null) saveCallback.onError();
+            if (loadCallback != null) loadCallback.onError();
         }
     }
 
@@ -297,7 +332,7 @@ public class FileStorage implements DataStorage {
     public static final class Builder {
         private int version = -1;
         private Context context;
-        private FileSerializer fileSerializer;
+        private DataSerializer dataSerializer;
         private DefaultDataCallback defaultDataCallback;
         private boolean debugMode;
 
@@ -315,11 +350,11 @@ public class FileStorage implements DataStorage {
         }
 
         /**
-         * @param fileSerializer fileSerializer serializer for objects. By default it's {@link com.shaubert.cache.persistance.JavaSerializer JavaSerializer}
+         * @param dataSerializer fileSerializer serializer for objects. By default it's {@link com.shaubert.cache.persistance.JavaSerializer JavaSerializer}
          * @return this
          */
-        public Builder fileSerializer(FileSerializer fileSerializer) {
-            this.fileSerializer = fileSerializer;
+        public Builder dataSerializer(DataSerializer dataSerializer) {
+            this.dataSerializer = dataSerializer;
             return this;
         }
 
@@ -349,7 +384,7 @@ public class FileStorage implements DataStorage {
             if (version == -1) {
                 throw new IllegalArgumentException("provide storage version");
             }
-            if (fileSerializer == null) fileSerializer = new JavaSerializer();
+            if (dataSerializer == null) dataSerializer = new JavaSerializer();
             return new FileStorage(this);
         }
     }

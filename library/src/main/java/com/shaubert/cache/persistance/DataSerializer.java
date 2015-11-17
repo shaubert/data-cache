@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public interface FileSerializer {
+public interface DataSerializer {
 
     boolean isApplicable(Class<?> clazz);
 
