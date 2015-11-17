@@ -245,7 +245,7 @@ public class FileStorage implements DataStorage {
                     long startTime = SystemClock.uptimeMillis();
                     if (dataBytes != null) {
                         outputStream = new FileOutputStream(dataFile);
-                        serializer.serialize(dataBytes, outputStream);
+                        outputStream.write(dataBytes);
                     } else {
                         boolean overrideLoading = defaultDataCallback != null
                                 && defaultDataCallback.hasDefaultDataFor(dataClass, key, storageVersion);
